@@ -8,6 +8,32 @@ pub enum ProcessCommand {
 }
 
 pub type OutputChannels = Vec<(String, Receiver<String>, Sender<ProcessCommand>)>;
+pub type ProcessSpawnResult = (OutputChannels, ProcessManager);
+
+pub struct ProcessManager {
+    control_senders: Vec<Sender<ProcessCommand>>,
+}
+
+impl Drop for ProcessManager {
+    fn drop(&mut self) {
+        // Try to stop all processes by sending Stop command
+        for tx in &self.control_senders {
+            let _ = tx.try_send(ProcessCommand::Stop);
+        }
+        // Optionally: sleep a bit to allow processes to terminate
+        // (tokio::time::sleep is async, so for Drop we can't await)
+        std::thread::sleep(std::time::Duration::from_millis(200));
+    }
+}
+
+impl ProcessManager {
+    pub fn stop_all(&mut self) {
+        for tx in &self.control_senders {
+            let _ = tx.try_send(ProcessCommand::Stop);
+        }
+        std::thread::sleep(std::time::Duration::from_millis(200));
+    }
+}
 
 /// Spawns all processes defined in the config and returns their output channels and control senders.
 ///
@@ -21,8 +47,9 @@ pub type OutputChannels = Vec<(String, Receiver<String>, Sender<ProcessCommand>)
 /// - The process name (String)
 /// - The receiver for output lines (Receiver<String>)
 /// - The sender for control commands (Sender<ProcessCommand>)
-pub async fn spawn_process(config: &Config) -> Result<OutputChannels, Box<dyn std::error::Error>> {
+pub async fn spawn_process(config: &Config) -> Result<ProcessSpawnResult, Box<dyn std::error::Error>> {
     let mut channels = Vec::new();
+    let mut control_senders = Vec::new();
     for proc in &config.processes {
         let (tx, rx) = mpsc::channel::<String>(100);
         let (cmd_tx, cmd_rx) = mpsc::channel::<ProcessCommand>(10);
@@ -33,9 +60,11 @@ pub async fn spawn_process(config: &Config) -> Result<OutputChannels, Box<dyn st
             tx,
             cmd_rx,
         );
+        control_senders.push(cmd_tx.clone());
         channels.push((proc.name.clone(), rx, cmd_tx));
     };
-    Ok(channels)
+    let manager = ProcessManager { control_senders };
+    Ok((channels, manager))
 }
 
 /// Spawns a process reader task that manages process lifecycle and output forwarding.
