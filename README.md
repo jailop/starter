@@ -2,7 +2,7 @@
 
 <img src="screenshot.png"/>
 
-## Motivation
+## 🚀 Motivation
 
 The problem that `Starter` solves is running multiple commands at the same time, to:
 
@@ -31,13 +31,13 @@ Why not run the commands as system services?
 * The goal is to run the commands in a development environment, where you need to see the output of each command.
 * It is a user tool that doesn't require complex configuration or elevated privileges.
 
-## Limitations
+## ⚠️ Limitations
 
 This program is intended to run just a few commands at the same time (less than
 6). It is assumed that these commands are not interactive, i.e., they don't
 require user input.
 
-## Installation
+## 🛠️ Installation
 
 Requirements:
 
@@ -59,7 +59,7 @@ cargo build --release
 cargo install --path .
 ```
 
-## Usage
+## 📖 Usage
 
 To use this program, you need to create a configuration file that describes the processes you want to run.
 The configuration file is a YAML file that contains a list of processes to run. For each process, you need to specify:
@@ -94,7 +94,7 @@ following command to start all the processes:
 starter runner.yaml
 ```
 
-Each process is assigned a number, starting in 1. Pressing the number key allows you to stop and restart each process.
+Each process is assigned a number, starting at 1. Pressing the number key allows you to stop and restart each process. Use up and down arrow keys to scroll throught the output of each process.
 
 To quit, press `q`.
 
