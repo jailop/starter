@@ -1,0 +1,13 @@
+processes:
+  - name: "Ping Google"
+    command: "ping"
+    args: ["google.com"]
+    cwd: "."
+  - name: "Ping Bing"
+    command: "ping"
+    args: ["bing.com"]
+    cwd: "."
+  - name: "Ping DuckDuckGo"
+    command: "ping"
+    args: ["duckduckgo.com"]
+    cwd: "."
