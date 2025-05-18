@@ -1,0 +1,10 @@
+processes:
+  - name: "Ping"
+    command: "ping"
+    args: ["-c", "10", "google.com"]
+    cwd: "."
+
+  - name: "List"
+    command: "ls"
+    args: ["-l", "."]
+    cwd: "."
