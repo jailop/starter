@@ -137,12 +137,14 @@ unsafe fn spawn_child(
     }
     #[cfg(windows)]
     {
+        use winapi::um::winbase::CREATE_NO_WINDOW;
         let spawned = Command::new(command)
             .args(args)
             .current_dir(cwd)
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
+            .creation_flags(CREATE_NO_WINDOW)
             .spawn()
             .expect("Failed to start process");
         let pgid = spawned.id().map(|pid| pid as i32); // Not used on Windows
