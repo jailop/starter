@@ -118,20 +118,36 @@ unsafe fn spawn_child(
     args: &[String],
     cwd: &str,
 ) -> (tokio::process::Child, Option<i32>) {
-    let spawned = unsafe { Command::new(command)
-        .args(args)
-        .current_dir(cwd)
-        .stdin(Stdio::null()) // <--- Add this line
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .pre_exec(|| {
-            libc::setpgid(0, 0);
-            Ok(())
-        })
-        .spawn()
-        .expect("Failed to start process") };
-    let pgid = spawned.id().map(|pid| pid as i32);
-    (spawned, pgid)
+    #[cfg(unix)]
+    {
+        let spawned = Command::new(command)
+            .args(args)
+            .current_dir(cwd)
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .pre_exec(|| {
+                libc::setpgid(0, 0);
+                Ok(())
+            })
+            .spawn()
+            .expect("Failed to start process");
+        let pgid = spawned.id().map(|pid| pid as i32);
+        (spawned, pgid)
+    }
+    #[cfg(windows)]
+    {
+        let spawned = Command::new(command)
+            .args(args)
+            .current_dir(cwd)
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("Failed to start process");
+        let pgid = spawned.id().map(|pid| pid as i32); // Not used on Windows
+        (spawned, pgid)
+    }
 }
 
 /// Spawns asynchronous tasks to read from the child's stdout and stderr, forwarding lines to the given sender.
@@ -176,13 +192,24 @@ where
 /// - Calls `.kill()` on the main child process to ensure it is terminated.
 /// - Cleans up the process handle and process group ID.
 fn stop_child(child: &mut Option<tokio::process::Child>, child_pgid: &mut Option<i32>) {
-    use nix::sys::signal::{self, Signal};
-    use nix::unistd::Pid;
-    if let Some(mut c) = child.take() {
-        if let Some(pgid) = child_pgid.take() {
-            let _ = signal::killpg(Pid::from_raw(pgid), Signal::SIGKILL);
+    #[cfg(unix)]
+    {
+        use nix::sys::signal::{self, Signal};
+        use nix::unistd::Pid;
+        if let Some(mut c) = child.take() {
+            if let Some(pgid) = child_pgid.take() {
+                let _ = signal::killpg(Pid::from_raw(pgid), Signal::SIGKILL);
+            }
+            let _ = futures::executor::block_on(c.kill());
         }
-        let _ = futures::executor::block_on(c.kill());
+    }
+    #[cfg(windows)]
+    {
+        if let Some(mut c) = child.take() {
+            let _ = futures::executor::block_on(c.kill());
+        }
+        // No process group support on Windows; only the main process is killed.
+        let _ = child_pgid.take();
     }
 }
 

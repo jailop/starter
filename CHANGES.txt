@@ -1,3 +1,7 @@
 0.1.0 - 2025-05-18
 
 - Initial release of the package.
+
+0.2.0 - 2025-05-19
+
+- Support for Windows added

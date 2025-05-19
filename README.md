@@ -41,7 +41,6 @@ require user input.
 
 Requirements:
 
-* \*nix system (Linux, macOS, WSL).
 * Rust installed (1.70.0 or later).
 * Cargo installed (1.70.0 or later).
 
