@@ -23,4 +23,3 @@ pub fn load_config(file_path: &str) -> Result<Config, Box<dyn std::error::Error>
     }
     Ok(config)
 }
-

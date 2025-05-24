@@ -7,14 +7,17 @@
 The problem that `Starter` solves is running multiple commands at the same time, to:
 
 - Start all the processes with a single command.
-- Show in the terminal the outputs of all the commands, each one in a different area.
+- Show in the terminal the outputs of all the commands, each one in a different
+  area.
 - Allow stopping and restarting each command.
 
 When can this approach be useful?
 
 * Simulating distributed systems, each one represented by a running command.
-* Setting up development environments, where multiple processes need to run at the same time.
-* Running multiple commands in parallel, for example, when you need to run a command in multiple folders.
+* Setting up development environments, where multiple processes need to run at
+  the same time.
+* Running multiple commands in parallel, for example, when you need to run a
+  command in multiple folders.
 
 Why not use a simple shell script?
 
@@ -28,8 +31,10 @@ Why not use multiple terminals, `tmux`, or `screen`?
 
 Why not run the commands as system services?
 
-* The goal is to run the commands in a development environment, where you need to see the output of each command.
-* It is a user tool that doesn't require complex configuration or elevated privileges.
+* The goal is to run the commands in a development environment, where you need
+  to see the output of each command.
+* It is a user tool that doesn't require complex configuration or elevated
+  privileges.
 
 ## ⚠️ Limitations
 
@@ -60,8 +65,9 @@ cargo install --path .
 
 ## 📖 Usage
 
-To use this program, you need to create a configuration file that describes the processes you want to run.
-The configuration file is a YAML file that contains a list of processes to run. For each process, you need to specify:
+To use this program, you need to create a configuration file that describes the
+processes you want to run.  The configuration file is a YAML file that contains
+a list of processes to run. For each process, you need to specify:
 
 * `name`: The name of the process. This is a custom name used to identify the
   process in the output.
@@ -93,7 +99,10 @@ following command to start all the processes:
 starter runner.yaml
 ```
 
-Each process is assigned a number, starting at 1. Pressing the number key allows you to stop and restart each process. Use up and down arrow keys to scroll throught the output of each process.
+Each process is assigned a number, starting at 1. Pressing the number key
+allows you to select the respective process. The space bar is used to stop and
+restart each process. Use up and down arrow keys to scroll throught the output
+of each process.
 
 To quit, press `q`.
 

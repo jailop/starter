@@ -1,10 +1,10 @@
 mod config;
-mod tui;
 mod process;
+mod tui;
 
 use config::load_config;
-use tui::run_tui;
 use process::spawn_process;
+use tui::run_tui;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -13,6 +13,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = load_config(config_file).expect("Failed to load config");
     let (channels, mut manager) = spawn_process(&config).await?;
     run_tui(channels).await?;
-    manager.stop_all(); // Ensure all processes are stopped on exit
+    manager.stop_all();
     Ok(())
 }

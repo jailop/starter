@@ -1,6 +1,10 @@
 use crate::config::Config;
-use tokio::{io::AsyncBufReadExt, process::Command, sync::mpsc::{self, Sender, Receiver}};
 use std::process::Stdio;
+use tokio::{
+    io::AsyncBufReadExt,
+    process::Command,
+    sync::mpsc::{self, Receiver, Sender},
+};
 
 pub enum ProcessCommand {
     Start,
@@ -47,7 +51,9 @@ impl ProcessManager {
 /// - The process name (String)
 /// - The receiver for output lines (Receiver<String>)
 /// - The sender for control commands (Sender<ProcessCommand>)
-pub async fn spawn_process(config: &Config) -> Result<ProcessSpawnResult, Box<dyn std::error::Error>> {
+pub async fn spawn_process(
+    config: &Config,
+) -> Result<ProcessSpawnResult, Box<dyn std::error::Error>> {
     let mut channels = Vec::new();
     let mut control_senders = Vec::new();
     for proc in &config.processes {
@@ -62,7 +68,7 @@ pub async fn spawn_process(config: &Config) -> Result<ProcessSpawnResult, Box<dy
         );
         control_senders.push(cmd_tx.clone());
         channels.push((proc.name.clone(), rx, cmd_tx));
-    };
+    }
     let manager = ProcessManager { control_senders };
     Ok((channels, manager))
 }
@@ -120,18 +126,20 @@ unsafe fn spawn_child(
 ) -> (tokio::process::Child, Option<i32>) {
     #[cfg(unix)]
     {
-        let spawned = Command::new(command)
-            .args(args)
-            .current_dir(cwd)
-            .stdin(Stdio::null())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .pre_exec(|| {
-                libc::setpgid(0, 0);
-                Ok(())
-            })
-            .spawn()
-            .expect("Failed to start process");
+        let spawned = unsafe {
+            Command::new(command)
+                .args(args)
+                .current_dir(cwd)
+                .stdin(Stdio::null())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .pre_exec(|| {
+                    libc::setpgid(0, 0);
+                    Ok(())
+                })
+                .spawn()
+                .expect("Failed to start process")
+        };
         let pgid = spawned.id().map(|pid| pid as i32);
         (spawned, pgid)
     }
@@ -156,7 +164,6 @@ unsafe fn spawn_child(
 /// and spawns a task for each that reads lines and sends them to the provided channel.
 /// This avoids aliasing and undefined behavior by using `.take()` to move the handles out of the child.
 fn spawn_output_readers(child: &mut tokio::process::Child, tx: &Sender<String>) {
-
     // Take ownership of stdio handles using .take() so no aliasing or UB occurs.
     if let Some(stdout) = child.stdout.take() {
         handle_output_owned(stdout, tx.clone());
@@ -212,4 +219,3 @@ fn stop_child(child: &mut Option<tokio::process::Child>, child_pgid: &mut Option
         let _ = child_pgid.take();
     }
 }
-

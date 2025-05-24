@@ -5,3 +5,7 @@
 0.2.0 - 2025-05-19
 
 - Support for Windows added
+
+1.0.0 - 2025-05-23
+
+- First stable release
