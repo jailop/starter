@@ -49,7 +49,15 @@ Requirements:
 * Rust installed (1.70.0 or later).
 * Cargo installed (1.70.0 or later).
 
-Clone the repository:
+Install using cargo:
+
+```sh
+cargo install starter
+```
+
+Make sure to have `./cargo/bin` in your `PATH`.
+
+Or clone the repository:
 
 ```bash
 git clone git@github.com:jailop/starter.git

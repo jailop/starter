@@ -11,12 +11,12 @@ pub enum ProcessCommand {
     Stop,
 }
 
-pub type OutputChannels = Vec<(String, Receiver<String>, Sender<ProcessCommand>)>;
-pub type ProcessSpawnResult = (OutputChannels, ProcessManager);
-
 pub struct ProcessManager {
     control_senders: Vec<Sender<ProcessCommand>>,
 }
+
+pub type OutputChannels = Vec<(String, Receiver<String>, Sender<ProcessCommand>)>;
+pub type ProcessSpawnResult = (OutputChannels, ProcessManager);
 
 impl Drop for ProcessManager {
     fn drop(&mut self) {
@@ -24,7 +24,7 @@ impl Drop for ProcessManager {
         for tx in &self.control_senders {
             let _ = tx.try_send(ProcessCommand::Stop);
         }
-        // Optionally: sleep a bit to allow processes to terminate
+        // sleep a bit to allow processes to terminate
         // (tokio::time::sleep is async, so for Drop we can't await)
         std::thread::sleep(std::time::Duration::from_millis(200));
     }
@@ -95,7 +95,9 @@ fn spawn_reader(
             match cmd {
                 ProcessCommand::Start => {
                     if child.is_none() {
-                        let (mut spawned, pgid) = unsafe { spawn_child(&command, &args, &cwd) };
+                        let (mut spawned, pgid) = unsafe { 
+                            spawn_child(&command, &args, &cwd) 
+                        };
                         child_pgid = pgid;
                         spawn_output_readers(&mut spawned, &tx);
                         child = Some(spawned);
@@ -155,7 +157,7 @@ unsafe fn spawn_child(
             .creation_flags(CREATE_NO_WINDOW)
             .spawn()
             .expect("Failed to start process");
-        let pgid = spawned.id().map(|pid| pid as i32); // Not used on Windows
+        let pgid = spawned.id().map(|pid| pid as i32);
         (spawned, pgid)
     }
 }
